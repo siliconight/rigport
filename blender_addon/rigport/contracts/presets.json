@@ -1,0 +1,100 @@
+{
+  "name": "RigPort Character Presets",
+  "version": "0.2.0",
+  "presets": {
+    "player_character": {
+      "name": "Player Character",
+      "requires_full_body": true,
+      "required_sockets": ["WeaponSocket_R", "WeaponSocket_L", "MuzzleSocket", "CameraAnchor_FP", "CameraAnchor_TP", "LeftFootstepSocket", "RightFootstepSocket", "Hitbox_Head", "Hitbox_Chest", "Hitbox_Pelvis"],
+      "recommended_sockets": ["BackWeaponSocket", "BackpackSocket", "HeadCosmeticSocket"],
+      "requires_vo_mouth": false,
+      "recommended_vo_mouth": true,
+      "requires_visemes": false,
+      "minimum_mouth_lod": 1,
+      "default_mouth_lod": 1,
+      "requires_animation_smoke_test": true
+    },
+    "enemy_grunt": {
+      "name": "Enemy Grunt",
+      "requires_full_body": true,
+      "required_sockets": ["WeaponSocket_R", "HeadCosmeticSocket", "LeftFootstepSocket", "RightFootstepSocket", "Hitbox_Head", "Hitbox_Chest", "Hitbox_Pelvis"],
+      "recommended_sockets": [],
+      "requires_vo_mouth": true,
+      "requires_visemes": false,
+      "minimum_mouth_lod": 1,
+      "default_mouth_lod": 1,
+      "requires_animation_smoke_test": true
+    },
+    "heavy_enemy": {
+      "name": "Heavy Enemy",
+      "requires_full_body": true,
+      "required_sockets": ["WeaponSocket_R", "Hitbox_Head", "Hitbox_Chest", "Hitbox_Pelvis"],
+      "recommended_sockets": [],
+      "requires_vo_mouth": true,
+      "requires_visemes": false,
+      "minimum_mouth_lod": 1,
+      "default_mouth_lod": 1,
+      "requires_animation_smoke_test": true,
+      "scale_range_m": [1.9, 2.8]
+    },
+    "civilian_npc": {
+      "name": "Civilian NPC",
+      "requires_full_body": true,
+      "required_sockets": ["HeadCosmeticSocket", "WeaponSocket_R", "WeaponSocket_L"],
+      "recommended_sockets": [],
+      "requires_vo_mouth": true,
+      "requires_visemes": false,
+      "minimum_mouth_lod": 1,
+      "default_mouth_lod": 1,
+      "requires_animation_smoke_test": false
+    },
+    "mission_npc": {
+      "name": "Mission NPC",
+      "requires_full_body": true,
+      "required_sockets": ["HeadCosmeticSocket"],
+      "recommended_sockets": [],
+      "requires_vo_mouth": true,
+      "requires_visemes": true,
+      "minimum_mouth_lod": 0,
+      "default_mouth_lod": 0,
+      "requires_animation_smoke_test": false
+    },
+    "first_person_arms": {
+      "name": "First-Person Arms",
+      "requires_full_body": false,
+      "required_bones_override": ["Root", "Chest", "LeftUpperArm", "LeftLowerArm", "LeftHand", "RightUpperArm", "RightLowerArm", "RightHand"],
+      "required_sockets": ["WeaponSocket_R", "MuzzleSocket", "CameraAnchor_FP"],
+      "recommended_sockets": ["WeaponSocket_L"],
+      "requires_vo_mouth": false,
+      "requires_visemes": false,
+      "minimum_mouth_lod": 3,
+      "default_mouth_lod": 3,
+      "requires_animation_smoke_test": true,
+      "skip_scale_check": true
+    },
+    "masked_character": {
+      "name": "Masked Character",
+      "requires_full_body": true,
+      "required_sockets": ["Hitbox_Head", "Hitbox_Chest", "Hitbox_Pelvis"],
+      "recommended_sockets": ["MaskSocket"],
+      "requires_vo_mouth": false,
+      "requires_visemes": false,
+      "minimum_mouth_lod": 3,
+      "default_mouth_lod": 3,
+      "requires_animation_smoke_test": true
+    },
+    "cosmetic_preview_dummy": {
+      "name": "Cosmetic Preview Dummy",
+      "requires_full_body": false,
+      "required_bones_override": ["Root", "Hips", "Spine", "Chest", "Neck", "Head"],
+      "required_sockets": ["HeadCosmeticSocket", "BackpackSocket", "ChestCosmeticSocket"],
+      "recommended_sockets": ["HatSocket", "GlassesSocket"],
+      "requires_vo_mouth": false,
+      "requires_visemes": false,
+      "minimum_mouth_lod": 3,
+      "default_mouth_lod": 3,
+      "requires_animation_smoke_test": false,
+      "skip_scale_check": true
+    }
+  }
+}

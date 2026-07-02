@@ -1,0 +1,29 @@
+{
+  "name": "RigPort Gameplay Socket Contract",
+  "version": "0.2.0",
+  "player_required_sockets": [
+    "WeaponSocket_R", "WeaponSocket_L", "MuzzleSocket",
+    "CameraAnchor_FP", "CameraAnchor_TP",
+    "LeftFootstepSocket", "RightFootstepSocket",
+    "Hitbox_Head", "Hitbox_Chest", "Hitbox_Pelvis"
+  ],
+  "optional_sockets": [
+    "BackWeaponSocket", "BackpackSocket", "HeadCosmeticSocket",
+    "MaskSocket", "HatSocket", "HairSocket", "GlassesSocket",
+    "ChestCosmeticSocket", "LeftHandCosmeticSocket", "RightHandCosmeticSocket",
+    "ThrowableSocket_R", "ThrowableSocket_L", "HolsterSocket_R", "HolsterSocket_L"
+  ],
+  "socket_parents": {
+    "WeaponSocket_R": "RightHand", "WeaponSocket_L": "LeftHand",
+    "MuzzleSocket": "WeaponSocket_R", "BackWeaponSocket": "Chest",
+    "BackpackSocket": "Chest", "ChestCosmeticSocket": "Chest",
+    "HeadCosmeticSocket": "Head", "MaskSocket": "Head", "HatSocket": "Head",
+    "HairSocket": "Head", "GlassesSocket": "Head",
+    "CameraAnchor_FP": "Head", "CameraAnchor_TP": "Root",
+    "LeftFootstepSocket": "LeftFoot", "RightFootstepSocket": "RightFoot",
+    "Hitbox_Head": "Head", "Hitbox_Chest": "Chest", "Hitbox_Pelvis": "Hips",
+    "ThrowableSocket_R": "RightHand", "ThrowableSocket_L": "LeftHand",
+    "HolsterSocket_R": "RightUpperLeg", "HolsterSocket_L": "LeftUpperLeg",
+    "LeftHandCosmeticSocket": "LeftHand", "RightHandCosmeticSocket": "RightHand"
+  }
+}

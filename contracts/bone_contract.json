@@ -1,0 +1,13 @@
+{
+  "name": "RigPort Humanoid Bone Contract",
+  "version": "0.2.0",
+  "required_bones": [
+    "Root", "Hips", "Spine", "Chest", "Neck", "Head",
+    "LeftUpperArm", "LeftLowerArm", "LeftHand",
+    "RightUpperArm", "RightLowerArm", "RightHand",
+    "LeftUpperLeg", "LeftLowerLeg", "LeftFoot",
+    "RightUpperLeg", "RightLowerLeg", "RightFoot"
+  ],
+  "recommended_bones": ["LeftShoulder", "RightShoulder", "LeftToe", "RightToe"],
+  "optional_face_bones": ["Jaw", "Eye_L", "Eye_R"]
+}

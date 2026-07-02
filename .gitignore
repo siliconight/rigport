@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+
+# Blender
+*.blend1
+*.blend2
+
+# Godot (when the addon is developed inside a test project)
+.godot/
+*.import
+rigport_reports/
+rigport_tests/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build artifacts
+*.zip

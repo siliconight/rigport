@@ -1,0 +1,26 @@
+{
+  "name": "RigPort Mouth LOD Contract",
+  "version": "0.2.0",
+  "lods": [
+    {
+      "lod": 0, "name": "Close-Up Dialogue", "mode": "timed_viseme",
+      "required_shapes": ["Viseme_REST", "Viseme_AA", "Viseme_EE", "Viseme_OH", "Viseme_FV", "Viseme_MBP", "Viseme_L"],
+      "update_rate_hz": 60
+    },
+    {
+      "lod": 1, "name": "Normal Gameplay", "mode": "amplitude",
+      "required_shapes": ["Mouth_Neutral", "Mouth_Open"],
+      "update_rate_hz": 30
+    },
+    {
+      "lod": 2, "name": "Far Gameplay", "mode": "cheap_flap",
+      "required_shapes": ["Mouth_Neutral", "Mouth_Open"],
+      "update_rate_hz": 10
+    },
+    {
+      "lod": 3, "name": "Disabled", "mode": "none",
+      "required_shapes": [],
+      "update_rate_hz": 0
+    }
+  ]
+}

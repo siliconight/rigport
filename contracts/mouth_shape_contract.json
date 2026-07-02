@@ -1,0 +1,12 @@
+{
+  "name": "RigPort Mouth Shape Contract",
+  "version": "0.2.0",
+  "required_mvp_shapes": ["Mouth_Neutral", "Mouth_Open", "Mouth_Wide", "Mouth_Narrow"],
+  "recommended_visemes": [
+    "Viseme_REST", "Viseme_AA", "Viseme_EE", "Viseme_OH",
+    "Viseme_FV", "Viseme_MBP", "Viseme_L"
+  ],
+  "optional_expression_shapes": [
+    "Mouth_Smile", "Mouth_Frown", "Brow_Up", "Brow_Down", "Blink_Left", "Blink_Right"
+  ]
+}
