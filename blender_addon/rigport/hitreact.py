@@ -57,6 +57,11 @@ def preset_mass_scale(preset_id):
     return float(entry.get("mass_scale", 1.0))
 
 
+def preset_stumble_resistance(preset_id):
+    entry = contract()["preset_support"].get(preset_id, {})
+    return float(entry.get("stumble_resistance", 1.0))
+
+
 # ---------------------------------------------------------------------------
 # validation (TDD section 19, Phase 1 scope — no clip checks yet)
 # ---------------------------------------------------------------------------
@@ -161,6 +166,16 @@ def build_profile(bone_names, preset_id, character_name, include_limbs):
         if bone in bone_names
     }
 
+    # Stumble / balance tuning for the v0.3 stumble kit. Thresholds scale up
+    # with the preset's stumble_resistance (heavy enemies harder to knock
+    # down, civilians easier); everything else is copied from the contract.
+    stumble_src = hc["defaults"]["stumble"]
+    resistance = preset_stumble_resistance(preset_id)
+    stumble = dict(stumble_src)
+    stumble["balance_threshold"] = round(stumble_src["balance_threshold"] * resistance, 3)
+    stumble["fall_threshold"] = round(stumble_src["fall_threshold"] * resistance, 3)
+    stumble["resistance"] = resistance
+
     return {
         "rigport_hitreact_version": PROFILE_VERSION,
         "character": character_name,
@@ -175,6 +190,7 @@ def build_profile(bone_names, preset_id, character_name, include_limbs):
             "total_mass_kg": total_mass,
             "mass_hints_kg": mass_hints,
         },
+        "stumble": stumble,
         "style_targets": {
             "animation_tags": list(hc["animation_tags"]),
             "recovery_pose": hc["defaults"]["recovery_pose"],

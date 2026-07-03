@@ -10,6 +10,7 @@ extends Node3D
 ##   4  Hit Chest Right       8  Cycle LOD 0-3
 ##   9  Reset (clear reactions + revive)
 ##   0  Cycle NPC state (idle → walking → running → aiming → in_cover → staggered)
+##   -  Knockdown (heavy chest hit, server-flagged stagger → likely fall)
 ##
 ## Directions are computed from the character's facing (-Z forward), so the
 ## test is orientation-independent. Seeds are randomized per shot and printed
@@ -48,7 +49,14 @@ func _ready() -> void:
 	if _receiver == null:
 		push_warning("RigPortHitReactTest: no RigPortHitReactReceiver found.")
 		return
-	print("HitReact test ready. 1-5 zone hits, 6 rapid fire, 7 kill shot, 8 LOD cycle, 9 reset.")
+	var st := _receiver.stumble()
+	if st != null:
+		st.stumble_started.connect(func(_dir: Vector3) -> void: print("  -> stumble started"))
+		st.fell.connect(func() -> void: print("  -> FELL"))
+		st.recovered.connect(func() -> void: print("  -> recovered"))
+		st.recovery_step_requested.connect(func(dir: Vector3, dist: float) -> void:
+			print("  -> recovery step %.2fm along %v" % [dist, dir]))
+	print("HitReact test ready. 1-5 zone hits, 6 rapid fire, 7 kill shot, 8 LOD cycle, 9 reset, 0 state, - knockdown.")
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -66,6 +74,22 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		KEY_8: _cycle_lod()
 		KEY_9: _reset()
 		KEY_0: _cycle_state()
+		KEY_MINUS: _knockdown()
+
+
+func _knockdown() -> void:
+	# Heavy chest hit from the front — enough to cross the fall threshold on
+	# most presets, or explicitly flag the fall for a guaranteed knockdown.
+	var hit_seed := _rng.randi_range(0, 9999)
+	print("HitReact test: KNOCKDOWN chest / heavy / seed %d" % hit_seed)
+	_receiver.apply_gunshot_hit(&"chest", Vector3.ZERO, _dir_from(&"front"), 80.0, &"heavy", hit_seed, false, true)
+	_report_stumble()
+
+
+func _report_stumble() -> void:
+	var st := _receiver.stumble()
+	if st != null:
+		print("  stumble state: %s" % st.state_name())
 
 
 ## Bullet travel direction for a hit coming FROM the named side of the
@@ -118,7 +142,6 @@ func _reset() -> void:
 	var driver := _receiver.driver()
 	if driver != null:
 		driver.clear_reactions()
-	_receiver.is_dead = false
+	_receiver.revive()
 	_state_i = 0
-	_receiver.set_npc_state(&"idle")
 	print("HitReact test: reactions cleared, character revived, state idle.")

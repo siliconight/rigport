@@ -1,4 +1,4 @@
-# RigPort 0.2.0-dev
+# RigPort 0.3.0
 
 **Rig it. Test it. Ship it to Godot.**
 
@@ -187,3 +187,37 @@ direction + class to the clip name, emits `baked_clip_requested` (hook into
 an AnimationTree add-blend for true additive playback), and falls back to
 playing directly on `baked_anim_player` — fine for far NPCs. The validator
 warns when a driver sits at LOD 2 with no reachable RP_Hit_* clips.
+
+## Stumble Kit (v0.3)
+
+The balance/stumble/fall layer above HitReact flinch. `RigPortStumbleController`
+(**Godot 4.3+**, `SkeletonModifier3D`) sits under the Skeleton3D *after* the
+HitReact driver so its whole-body lean composes on top of the flinch. It
+accumulates a mass-weighted balance impulse from each hit (using the profile's
+`mass_hints_kg` — a pelvis hit unbalances more than a hand), and when balance
+crosses the profile thresholds the NPC **staggers** (lean + a
+`recovery_step_requested` signal the mover can honor) or **falls** (partial
+ragdoll via an assigned `PhysicalBoneSimulator3D`, else a procedural collapse
+plus a `fell` signal). Server flags still win: `event.stagger` forces a
+stagger and `event.killed` forces a fall, so gameplay stays authoritative;
+the local balance model only adds visual richness and drives stumbles in
+single-player/testing.
+
+Per-character tuning ships in the profile's `stumble` block, with thresholds
+scaled by preset `stumble_resistance` (heavy enemies 1.8x harder to knock
+down, civilians 0.7x). Dock: **Add Stumble Controller** (auto-wires the
+profile and any PhysicalBoneSimulator3D). Signals: `stumble_started`,
+`recovery_step_requested(local_dir, distance)`, `fell`, `recovered`. The
+controller never moves the gameplay capsule — a recovery step is a request,
+not a teleport.
+
+### Wiring the recovery step (gameplay side)
+
+```gdscript
+# On your CharacterBody3D mover:
+receiver.stumble().recovery_step_requested.connect(
+    func(local_dir: Vector3, dist: float) -> void:
+        var world_dir := global_transform.basis * local_dir
+        _pending_step = world_dir * dist   # apply over a few physics frames
+)
+```

@@ -31,6 +31,7 @@ func _ready() -> void:
 	_add_button("Add HitReact Driver", _on_add_hitreact_driver)
 	_add_button("Assign HitReact Profile", _on_assign_hitreact_profile)
 	_add_button("Create HitReact Test Scene", _on_create_hitreact_test_scene)
+	_add_button("Add Stumble Controller", _on_add_stumble_controller)
 	_add_button("Save Readiness Report", _on_save_report)
 
 	var scroll := ScrollContainer.new()
@@ -276,6 +277,46 @@ func _on_create_hitreact_test_scene() -> void:
 		return
 	EditorInterface.get_resource_filesystem().scan()
 	_say("HitReact test scene saved: %s\nOpen it, press F6, then keys 1-5 fire zone hits, 6 rapid fire, 7 kill shot, 8 LOD cycle, 9 reset, 0 cycles NPC state." % out_path)
+
+
+func _on_add_stumble_controller() -> void:
+	if not _hitreact_supported():
+		return
+	var node := _selected_node()
+	if node == null:
+		return
+	var driver := _hitreact_driver_of(node)
+	if driver == null:
+		_say("[color=orange]Add a HitReact Driver first — the stumble layer sits above it.[/color]")
+		return
+	var skeleton := RigPortValidator._find_skeleton(node)
+	if skeleton == null:
+		_say("[color=red]No Skeleton3D found under '%s'.[/color]" % node.name)
+		return
+	var stumble_script: Script = load("res://addons/rigport/rigport_stumble_controller.gd")
+	for child: Node in skeleton.get_children():
+		if child.get_script() == stumble_script:
+			_say("A RigPortStumbleController is already attached to '%s'." % node.name)
+			return
+
+	var stumble: Node = stumble_script.new()
+	stumble.name = "RigPortStumbleController"
+	# Must sit AFTER the HitReact driver so its lean composes on the flinch.
+	skeleton.add_child(stumble)
+	skeleton.move_child(stumble, skeleton.get_child_count() - 1)
+	stumble.owner = EditorInterface.get_edited_scene_root()
+
+	var profile_path := str(driver.get("profile_path"))
+	if not profile_path.is_empty():
+		stumble.set("profile_path", profile_path)
+	var sims := node.find_children("*", "PhysicalBoneSimulator3D", true, false)
+	var note := ""
+	if not sims.is_empty():
+		stumble.set("physical_bone_simulator", stumble.get_path_to(sims[0]))
+		note = "\nWired PhysicalBoneSimulator3D for fall ragdoll."
+	else:
+		note = "\n[color=orange]No PhysicalBoneSimulator3D — falls play as procedural collapse + `fell` signal.[/color]"
+	_say("Added RigPortStumbleController above the HitReact driver on '%s'.%s" % [node.name, note])
 
 
 func _on_save_report() -> void:

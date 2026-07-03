@@ -313,9 +313,31 @@ static func _check_hitreact_profile(r: Dictionary, root: Node, skeleton: Skeleto
 	if not profile.has("physics"):
 		_warn(r, "HitReact profile has no physics block (mass hints) — re-export with RigPort 0.2+ for stumble/ragdoll readiness.")
 
+	# v0.3 stumble layer: only checked when a controller is actually present.
+	var skeleton := _find_skeleton(root)
+	var stumble_node := _find_stumble_controller(skeleton) if skeleton != null else null
+	if stumble_node != null:
+		if not profile.has("stumble"):
+			_warn(r, "Stumble controller present but profile has no stumble block — re-export with RigPort 0.3+.")
+		elif profile.get("physics", {}).get("mass_hints_kg", {}).is_empty():
+			_warn(r, "Stumble controller has no mass hints to weight balance — re-export the profile.")
+		var sim_path: NodePath = stumble_node.get("physical_bone_simulator")
+		if sim_path.is_empty():
+			_pass(r, "Stumble controller present (procedural fall; no ragdoll simulator assigned).")
+		else:
+			_pass(r, "Stumble controller present with a PhysicalBoneSimulator3D for falls.")
+
 
 static func _find_hitreact_driver(skeleton: Skeleton3D) -> Node:
 	var script: Script = load("res://addons/rigport/rigport_hit_react_driver.gd")
+	for child: Node in skeleton.get_children():
+		if child.get_script() == script:
+			return child
+	return null
+
+
+static func _find_stumble_controller(skeleton: Skeleton3D) -> Node:
+	var script: Script = load("res://addons/rigport/rigport_stumble_controller.gd")
 	for child: Node in skeleton.get_children():
 		if child.get_script() == script:
 			return child

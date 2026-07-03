@@ -1,8 +1,7 @@
 """RigPort HitReact Blender operators (panel section 7: Damage Reactions).
 
-Phase 1 scope: generate + validate + export the .hitreact.json profile, and
-preview reactions on the rig. Additive clip baking (LOD 2 fallback) is
-deferred to a later phase per the TDD implementation plan.
+Generate + validate + export the .hitreact.json profile, preview reactions
+on the rig, and bake additive RP_Hit_* clips (LOD 2 fallback).
 """
 
 import math

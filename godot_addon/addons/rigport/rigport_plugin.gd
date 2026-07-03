@@ -7,6 +7,7 @@ const DOCK_SCRIPT := preload("res://addons/rigport/rigport_dock.gd")
 const DRIVER_SCRIPT := preload("res://addons/rigport/rigport_vo_mouth_driver.gd")
 const HITREACT_DRIVER_SCRIPT := preload("res://addons/rigport/rigport_hit_react_driver.gd")
 const HITREACT_RECEIVER_SCRIPT := preload("res://addons/rigport/rigport_hit_react_receiver.gd")
+const STUMBLE_SCRIPT := preload("res://addons/rigport/rigport_stumble_controller.gd")
 
 var _dock: Control
 
@@ -19,8 +20,9 @@ func _enter_tree() -> void:
 	if ClassDB.class_exists("SkeletonModifier3D"):
 		add_custom_type("RigPortHitReactDriver", "SkeletonModifier3D", HITREACT_DRIVER_SCRIPT, null)
 		add_custom_type("RigPortHitReactReceiver", "Node", HITREACT_RECEIVER_SCRIPT, null)
+		add_custom_type("RigPortStumbleController", "SkeletonModifier3D", STUMBLE_SCRIPT, null)
 	else:
-		push_warning("RigPort: HitReact needs Godot 4.3+ (SkeletonModifier3D) — HitReact nodes not registered.")
+		push_warning("RigPort: HitReact needs Godot 4.3+ (SkeletonModifier3D) — HitReact/Stumble nodes not registered.")
 
 
 func _exit_tree() -> void:
@@ -30,3 +32,4 @@ func _exit_tree() -> void:
 	if ClassDB.class_exists("SkeletonModifier3D"):
 		remove_custom_type("RigPortHitReactDriver")
 		remove_custom_type("RigPortHitReactReceiver")
+		remove_custom_type("RigPortStumbleController")

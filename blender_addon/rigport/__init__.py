@@ -10,7 +10,7 @@ produces the character readiness report.
 bl_info = {
     "name": "RigPort",
     "author": "GabagoolStudios",
-    "version": (0, 2, 0),
+    "version": (0, 3, 0),
     "blender": (4, 0, 0),
     "location": "3D Viewport > Sidebar (N) > RigPort",
     "description": "Rig it. Test it. Ship it to Godot. Guided humanoid character prep for Godot.",

@@ -20,6 +20,7 @@ extends Node
 var is_dead := false
 
 var _driver: RigPortHitReactDriver
+var _stumble: RigPortStumbleController
 
 
 func _ready() -> void:
@@ -31,6 +32,11 @@ func _ready() -> void:
 			_driver = found[0]
 	if _driver == null:
 		push_warning("RigPortHitReactReceiver: no RigPortHitReactDriver found under the character.")
+	# Optional v0.3 stumble layer — forwarded alongside the flinch when present.
+	var host2 := get_parent() if get_parent() != null else self
+	var st := host2.find_children("*", "RigPortStumbleController", true, false)
+	if not st.is_empty():
+		_stumble = st[0]
 
 
 ## The one gameplay-facing method (TDD 12.4).
@@ -48,6 +54,8 @@ func apply_hit(event: RigPortHitEvent) -> void:
 	if event.killed:
 		is_dead = true
 	_driver.push_hit(event)
+	if _stumble != null:
+		_stumble.push_balance_impulse(event)
 
 
 ## Convenience wrapper matching TDD 21.1.
@@ -73,6 +81,19 @@ func set_dead(value: bool) -> void:
 	is_dead = value
 	if value:
 		set_npc_state(&"dying")
+
+
+func revive() -> void:
+	is_dead = false
+	set_npc_state(&"idle")
+	if _driver != null:
+		_driver.clear_reactions()
+	if _stumble != null:
+		_stumble.get_up()
+
+
+func stumble() -> RigPortStumbleController:
+	return _stumble
 
 
 ## Forward the AI/locomotion state to the driver (idle, walking, running,

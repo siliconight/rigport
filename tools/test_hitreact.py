@@ -67,6 +67,12 @@ check("running lower-body and staggered soft scales in (0,1)",
 check("mass fractions sum to ~1.0", abs(sum(hc["defaults"]["mass_fractions"].values()) - 1.0) < 1e-6)
 check("animation tag vocabulary present",
       set(hc["animation_tags"]) >= {"pain", "stumble", "fall", "brace", "recoil", "recovery"})
+_st = hc["defaults"]["stumble"]
+check("stumble thresholds ordered (balance < fall)", _st["balance_threshold"] < _st["fall_threshold"])
+check("stumble impulse classes match contract classes",
+      set(_st["impulse_scale"]) == set(hc["impulse_classes"]))
+check("lean bones are torso/head chain",
+      set(_st["lean_bones"]) <= {"Hips", "Spine", "Chest", "Neck", "Head"})
 
 print("validate")
 check("full rig passes", not hitreact.has_failures(hitreact.validate(FULL_RIG, "enemy_grunt", False)))
@@ -104,6 +110,15 @@ check("physics block: total mass + per-bone kg hints filtered to rig",
 check("heavy_enemy mass_scale 1.5 applied", ph["physics"]["total_mass_kg"] == 120.0)
 check("style targets: tags + recovery pose",
       "stumble" in p["style_targets"]["animation_tags"] and p["style_targets"]["recovery_pose"])
+
+check("profile carries stumble block with resistance 1.0 default",
+      p["stumble"]["resistance"] == 1.0 and p["stumble"]["balance_threshold"] == _st["balance_threshold"])
+check("heavy_enemy stumble_resistance 1.8 raises thresholds",
+      abs(ph["stumble"]["balance_threshold"] - _st["balance_threshold"] * 1.8) < 1e-3
+      and abs(ph["stumble"]["fall_threshold"] - _st["fall_threshold"] * 1.8) < 1e-3)
+_pc = hitreact.build_profile(FULL_RIG, "civilian_npc", "c", False)
+check("civilian_npc stumble_resistance 0.7 lowers thresholds",
+      abs(_pc["stumble"]["balance_threshold"] - _st["balance_threshold"] * 0.7) < 1e-3)
 
 check("profile JSON round-trips", json.loads(hitreact.profile_to_json(p)) == p)
 

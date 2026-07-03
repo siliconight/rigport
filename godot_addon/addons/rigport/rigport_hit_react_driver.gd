@@ -21,7 +21,7 @@ extends SkeletonModifier3D
 		profile_path = value
 		if is_inside_tree():
 			_load_profile()
-## 0 full procedural, 1 torso/head only, 2 baked clips (not yet), 3 disabled.
+## 0 full procedural, 1 torso/head only, 2 baked clips, 3 disabled.
 @export_range(0, 3) var lod := 0
 ## Current NPC state, set by gameplay/AI (TDD 13.3 / 16). Scales reaction
 ## strength via the contract state_modifiers table: idle, walking, running,
