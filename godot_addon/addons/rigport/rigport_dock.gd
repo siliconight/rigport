@@ -28,6 +28,9 @@ func _ready() -> void:
 	_add_button("Add VO Mouth Driver", _on_add_driver)
 	_add_button("Connect Voice Audio Player", _on_connect_audio)
 	_add_button("Create VO Test Scene", _on_create_test_scene)
+	_add_button("Add HitReact Driver", _on_add_hitreact_driver)
+	_add_button("Assign HitReact Profile", _on_assign_hitreact_profile)
+	_add_button("Create HitReact Test Scene", _on_create_hitreact_test_scene)
 	_add_button("Save Readiness Report", _on_save_report)
 
 	var scroll := ScrollContainer.new()
@@ -153,6 +156,128 @@ func _on_create_test_scene() -> void:
 	_say("VO test scene saved: %s\nOpen it and press F6. It plays a generated voice burst and prints PASS/FAIL to Output." % out_path)
 
 
+# ------------------------------------------------------------ hitreact
+
+
+func _hitreact_supported() -> bool:
+	if ClassDB.class_exists("SkeletonModifier3D"):
+		return true
+	_say("[color=orange]HitReact needs Godot 4.3+ (SkeletonModifier3D).[/color]")
+	return false
+
+
+func _hitreact_driver_of(node: Node) -> Node:
+	var script: Script = load("res://addons/rigport/rigport_hit_react_driver.gd")
+	for child: Node in node.find_children("*", "Node", true, false):
+		if child.get_script() == script:
+			return child
+	return null
+
+
+## Profile exported next to the character scene:
+## enemy_grunt.glb -> enemy_grunt.hitreact.json
+func _guess_profile_path(node: Node) -> String:
+	var scene_path := node.scene_file_path
+	if scene_path.is_empty():
+		return ""
+	var guess := scene_path.get_basename() + ".hitreact.json"
+	return guess if FileAccess.file_exists(guess) else ""
+
+
+func _on_add_hitreact_driver() -> void:
+	if not _hitreact_supported():
+		return
+	var node := _selected_node()
+	if node == null:
+		return
+	var support: String = RigPortContracts.hitreact().get("preset_support", {}) \
+		.get(_preset_id(), {}).get("support", "optional")
+	if support == "unsupported":
+		_say("[color=orange]Preset '%s' does not support hit reactions.[/color]" % _preset_id())
+		return
+	if _hitreact_driver_of(node) != null:
+		_say("A RigPortHitReactDriver is already attached to '%s'." % node.name)
+		return
+	var skeleton := RigPortValidator._find_skeleton(node)
+	if skeleton == null:
+		_say("[color=red]No Skeleton3D found under '%s'.[/color]" % node.name)
+		return
+
+	var driver: Node = load("res://addons/rigport/rigport_hit_react_driver.gd").new()
+	driver.name = "RigPortHitReactDriver"
+	skeleton.add_child(driver)
+	driver.owner = EditorInterface.get_edited_scene_root()
+
+	var receiver_note := ""
+	if node.find_children("*", "RigPortHitReactReceiver", true, false).is_empty():
+		var receiver: Node = load("res://addons/rigport/rigport_hit_react_receiver.gd").new()
+		receiver.name = "RigPortHitReactReceiver"
+		node.add_child(receiver)
+		receiver.owner = EditorInterface.get_edited_scene_root()
+		receiver_note = "\nAdded RigPortHitReactReceiver to the character root."
+
+	var profile_note := "\n[color=orange]No profile assigned — use Assign HitReact Profile.[/color]"
+	var guess := _guess_profile_path(node)
+	if not guess.is_empty():
+		driver.set("profile_path", guess)
+		profile_note = "\nProfile auto-assigned: %s" % guess
+	_say("Added RigPortHitReactDriver under '%s'.%s%s" % [skeleton.name, receiver_note, profile_note])
+
+
+func _on_assign_hitreact_profile() -> void:
+	if not _hitreact_supported():
+		return
+	var node := _selected_node()
+	if node == null:
+		return
+	var driver := _hitreact_driver_of(node)
+	if driver == null:
+		_say("[color=orange]No RigPortHitReactDriver on '%s' — use Add HitReact Driver first.[/color]" % node.name)
+		return
+	var dialog := EditorFileDialog.new()
+	dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
+	dialog.access = EditorFileDialog.ACCESS_RESOURCES
+	dialog.add_filter("*.hitreact.json, *.json", "HitReact Profiles")
+	dialog.file_selected.connect(func(path: String) -> void:
+		driver.set("profile_path", path)
+		_say("HitReact profile assigned: %s" % path)
+		dialog.queue_free()
+	)
+	dialog.canceled.connect(dialog.queue_free)
+	EditorInterface.get_base_control().add_child(dialog)
+	dialog.popup_centered_ratio(0.5)
+
+
+func _on_create_hitreact_test_scene() -> void:
+	if not _hitreact_supported():
+		return
+	var node := _selected_node()
+	if node == null:
+		return
+	var scene_path := node.scene_file_path
+	if scene_path.is_empty():
+		_say("[color=orange]'%s' is not an instanced/saved scene. Save the character as a .tscn/.glb scene first.[/color]" % node.name)
+		return
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(TEST_SCENE_DIR))
+	var root := Node3D.new()
+	root.name = "RigPortHitReactTest_%s" % node.name
+	root.set_script(load("res://addons/rigport/rigport_hit_react_test.gd"))
+	root.set("character_scene", load(scene_path))
+	var packed := PackedScene.new()
+	if packed.pack(root) != OK:
+		_say("[color=red]Failed to pack the HitReact test scene.[/color]")
+		root.free()
+		return
+	var out_path := "%s/hitreact_test_%s.tscn" % [TEST_SCENE_DIR, str(node.name).validate_filename().to_lower()]
+	var err := ResourceSaver.save(packed, out_path)
+	root.free()
+	if err != OK:
+		_say("[color=red]Failed to save %s (err %d).[/color]" % [out_path, err])
+		return
+	EditorInterface.get_resource_filesystem().scan()
+	_say("HitReact test scene saved: %s\nOpen it, press F6, then keys 1-5 fire zone hits, 6 rapid fire, 7 kill shot, 8 LOD cycle, 9 reset, 0 cycles NPC state." % out_path)
+
+
 func _on_save_report() -> void:
 	if _last_result.is_empty():
 		_say("[color=orange]Run Validate Selected Character first.[/color]")
@@ -177,6 +302,16 @@ func _render(r: Dictionary) -> void:
 		color = "yellow"
 	var text := "[b]%s[/b]  —  %s\n" % [r.get("character", "?"), r.get("preset_name", "?")]
 	text += "[b]Character Readiness: [color=%s]%d%%[/color][/b]\n%s\n" % [color, score, r.get("band", "")]
+	if r.has("hitreact"):
+		var hr_status: String = r.get("hitreact", "N/A")
+		var hr_color := "green"
+		if hr_status == "FAIL":
+			hr_color = "red"
+		elif hr_status == "WARN":
+			hr_color = "yellow"
+		elif hr_status == "N/A":
+			hr_color = "gray"
+		text += "HitReact: [color=%s]%s[/color]\n" % [hr_color, hr_status]
 	text += _section("[color=red]FAIL[/color]", r.get("fails", []))
 	text += _section("[color=yellow]WARN[/color]", r.get("warns", []))
 	text += _section("[color=green]PASS[/color]", r.get("passes", []))

@@ -69,6 +69,56 @@ class RigPortSettings(bpy.types.PropertyGroup):
         ),
         default=False,
     )
+    hitreact_enabled: bpy.props.BoolProperty(
+        name="Enable HitReact",
+        description="Generate procedural gunshot hit reaction data for this character",
+        default=False,
+    )
+    hitreact_include_limbs: bpy.props.BoolProperty(
+        name="Include Optional Limb Zones",
+        description="Also generate arm and leg hit zones (head/chest/pelvis are always included)",
+        default=False,
+    )
+    hitreact_preview_zone: bpy.props.EnumProperty(
+        name="Zone",
+        description="Hit zone to preview",
+        items=[
+            ("head", "Head", ""), ("chest", "Chest", ""), ("pelvis", "Pelvis", ""),
+            ("left_arm", "Left Arm", ""), ("right_arm", "Right Arm", ""),
+            ("left_leg", "Left Leg", ""), ("right_leg", "Right Leg", ""),
+        ],
+        default="chest",
+    )
+    hitreact_preview_direction: bpy.props.EnumProperty(
+        name="Direction",
+        description="Incoming hit direction to preview (the body moves away from it)",
+        items=[
+            ("front", "Front", ""), ("back", "Back", ""),
+            ("left", "Left", ""), ("right", "Right", ""),
+            ("front_left", "Front-Left", ""), ("front_right", "Front-Right", ""),
+            ("back_left", "Back-Left", ""), ("back_right", "Back-Right", ""),
+        ],
+        default="front",
+    )
+    hitreact_impulse_class: bpy.props.EnumProperty(
+        name="Impulse",
+        description="Impulse class to preview",
+        items=[("small", "Small", ""), ("medium", "Medium", ""), ("heavy", "Heavy", "")],
+        default="medium",
+    )
+    hitreact_seed: bpy.props.IntProperty(
+        name="Seed",
+        description="Variation seed. Same seed reproduces the same reaction (preview re-seeds each loop from here)",
+        default=0,
+        min=0,
+        max=9999,
+    )
+    hitreact_export_path: bpy.props.StringProperty(
+        name="Profile Path",
+        description="Output .hitreact.json path. Keep it next to the GLB with the same versioned base name",
+        subtype="FILE_PATH",
+        default="//export/character_v001.hitreact.json",
+    )
     results: bpy.props.CollectionProperty(type=RigPortResult)
     results_index: bpy.props.IntProperty(default=0)
 

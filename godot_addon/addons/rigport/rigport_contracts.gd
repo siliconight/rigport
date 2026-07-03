@@ -45,6 +45,10 @@ static func presets() -> Dictionary:
 	return _load("presets.json").get("presets", {})
 
 
+static func hitreact() -> Dictionary:
+	return _load("hit_react_contract.json")
+
+
 static func preset(preset_id: String) -> Dictionary:
 	return presets().get(preset_id, {})
 

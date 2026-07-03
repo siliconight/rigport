@@ -20,6 +20,7 @@ SOCKETS = _load("socket_contract.json")
 MOUTH = _load("mouth_shape_contract.json")
 MOUTH_LOD = _load("mouth_lod_contract.json")
 PRESETS = _load("presets.json")["presets"]
+HITREACT = _load("hit_react_contract.json")
 
 MARKER_PREFIX = "RP_"
 MARKER_COLLECTION = "RigPort Markers"

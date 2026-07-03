@@ -40,6 +40,7 @@ static func validate(root: Node, preset_id: String) -> Dictionary:
 	_check_mouth(r, root, p)
 	_check_scale(r, root, p)
 	_check_direction(r, skeleton)
+	_check_hitreact(r, root, skeleton, preset_id)
 
 	_finish(r)
 	return r
@@ -209,6 +210,126 @@ static func _check_direction(r: Dictionary, skeleton: Skeleton3D) -> void:
 		_pass(r, "Character faces -Z (expected gameplay forward).")
 	else:
 		_fail(r, "Character appears to face +Z — forward direction is reversed.")
+
+
+# ---------------------------------------------------------------- hitreact
+
+
+## HitReact readiness (TDD 18). Sets r["hitreact"] to PASS/WARN/FAIL/N/A
+## for the report line; score deductions flow through _warn/_fail as usual.
+static func _check_hitreact(r: Dictionary, root: Node, skeleton: Skeleton3D, preset_id: String) -> void:
+	var hc := RigPortContracts.hitreact()
+	var support: String = hc.get("preset_support", {}).get(preset_id, {}).get("support", "optional")
+	if support == "unsupported":
+		r["hitreact"] = "N/A"
+		return
+	if not ClassDB.class_exists("SkeletonModifier3D"):
+		_warn(r, "HitReact needs Godot 4.3+ (SkeletonModifier3D) — cannot validate on this engine.")
+		r["hitreact"] = "WARN"
+		return
+
+	var driver := _find_hitreact_driver(skeleton)
+	if driver == null:
+		if support == "default":
+			_warn(r, "No RigPortHitReactDriver under the Skeleton3D (recommended for this preset).")
+			r["hitreact"] = "WARN"
+		else:
+			_pass(r, "HitReact not set up (optional for this preset).")
+			r["hitreact"] = "N/A"
+		return
+
+	var fails_before: int = r["fails"].size()
+	var warns_before: int = r["warns"].size()
+
+	var profile_path := str(driver.get("profile_path"))
+	if profile_path.is_empty():
+		_fail(r, "HitReact driver has no profile assigned.", 10)
+	else:
+		var profile := _load_hitreact_profile(profile_path)
+		if profile.is_empty():
+			_fail(r, "HitReact profile missing or invalid: %s." % profile_path, 10)
+		else:
+			_check_hitreact_profile(r, root, skeleton, profile, hc)
+
+	var lod := int(driver.get("lod"))
+	if lod == 2:
+		var player_path: NodePath = driver.get("baked_anim_player")
+		var player := driver.get_node_or_null(player_path) as AnimationPlayer if not player_path.is_empty() else null
+		var has_clips := false
+		if player != null:
+			for anim: String in player.get_animation_list():
+				if anim.begins_with("RP_Hit_"):
+					has_clips = true
+					break
+		if not has_clips:
+			_warn(r, "Driver at LOD 2 but no RP_Hit_* baked clips reachable — bake clips in Blender and set baked_anim_player (or connect baked_clip_requested).")
+
+	if root.find_children("*", "RigPortHitReactReceiver", true, false).is_empty():
+		_warn(r, "No RigPortHitReactReceiver on the character — gameplay has no clean apply_hit() entry point.")
+
+	if r["fails"].size() > fails_before:
+		r["hitreact"] = "FAIL"
+	elif r["warns"].size() > warns_before:
+		r["hitreact"] = "WARN"
+	else:
+		_pass(r, "HitReact driver, profile, zones, and sockets all resolve.")
+		r["hitreact"] = "PASS"
+
+
+static func _check_hitreact_profile(r: Dictionary, root: Node, skeleton: Skeleton3D, profile: Dictionary, hc: Dictionary) -> void:
+	var version := str(profile.get("rigport_hitreact_version", ""))
+	if not version.begins_with("0.1"):
+		_fail(r, "Unsupported HitReact profile version '%s'." % version, 10)
+		return
+
+	var zones: Dictionary = profile.get("zones", {})
+	var missing_zones: Array[String] = []
+	for zone_id: String in hc.get("required_hit_zones", {}):
+		if not zones.has(zone_id):
+			missing_zones.append(zone_id)
+	if not missing_zones.is_empty():
+		_fail(r, "HitReact profile missing required zones: %s." % ", ".join(missing_zones))
+
+	var missing_sockets: Array[String] = []
+	var missing_bones: Array[String] = []
+	for zone_id: String in zones:
+		var zone: Dictionary = zones[zone_id]
+		var socket := str(zone.get("socket", ""))
+		if not socket.is_empty() and not _has_socket(root, skeleton, socket):
+			missing_sockets.append(socket)
+		for bones: Dictionary in [zone.get("primary_bones", {}), zone.get("secondary_bones", {})]:
+			for bone_name: String in bones:
+				if skeleton.find_bone(bone_name) == -1 and not missing_bones.has(bone_name):
+					missing_bones.append(bone_name)
+	if not missing_sockets.is_empty():
+		_fail(r, "HitReact zones reference missing sockets: %s." % ", ".join(missing_sockets))
+	if not missing_bones.is_empty():
+		_fail(r, "HitReact profile bones missing on skeleton: %s." % ", ".join(missing_bones))
+
+	var default_lod := int(profile.get("default_lod", 0))
+	if default_lod < 0 or default_lod > 3:
+		_warn(r, "HitReact profile default_lod %d is out of range 0-3." % default_lod)
+
+	if not profile.has("physics"):
+		_warn(r, "HitReact profile has no physics block (mass hints) — re-export with RigPort 0.2+ for stumble/ragdoll readiness.")
+
+
+static func _find_hitreact_driver(skeleton: Skeleton3D) -> Node:
+	var script: Script = load("res://addons/rigport/rigport_hit_react_driver.gd")
+	for child: Node in skeleton.get_children():
+		if child.get_script() == script:
+			return child
+	return null
+
+
+static func _load_hitreact_profile(path: String) -> Dictionary:
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return {}
+	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	if typeof(parsed) != TYPE_DICTIONARY or not parsed.has("zones"):
+		return {}
+	return parsed
 
 
 # ---------------------------------------------------------------- scoring

@@ -10,7 +10,7 @@ produces the character readiness report.
 bl_info = {
     "name": "RigPort",
     "author": "GabagoolStudios",
-    "version": (0, 1, 0),
+    "version": (0, 2, 0),
     "blender": (4, 0, 0),
     "location": "3D Viewport > Sidebar (N) > RigPort",
     "description": "Rig it. Test it. Ship it to Godot. Guided humanoid character prep for Godot.",
@@ -19,9 +19,9 @@ bl_info = {
 
 import importlib
 
-from . import contracts, properties, operators, panel
+from . import contracts, properties, operators, hitreact, hitreact_operators, panel
 
-_MODULES = (contracts, properties, operators, panel)
+_MODULES = (contracts, properties, operators, hitreact, hitreact_operators, panel)
 
 
 def register():
@@ -29,11 +29,13 @@ def register():
         importlib.reload(mod)
     properties.register()
     operators.register()
+    hitreact_operators.register()
     panel.register()
 
 
 def unregister():
     panel.unregister()
+    hitreact_operators.unregister()
     operators.unregister()
     properties.unregister()
 

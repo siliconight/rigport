@@ -1,0 +1,140 @@
+{
+  "name": "RigPort Hit Reaction Contract",
+  "version": "0.1.0",
+  "requires_bones": [
+    "Root", "Hips", "Spine", "Chest", "Neck", "Head",
+    "LeftUpperArm", "LeftLowerArm", "RightUpperArm", "RightLowerArm",
+    "LeftUpperLeg", "RightUpperLeg"
+  ],
+  "required_hit_zones": {
+    "head": {
+      "socket": "Hitbox_Head",
+      "primary_bones": {"Head": 1.0, "Neck": 0.6},
+      "secondary_bones": {"Chest": 0.25},
+      "max_degrees": 18.0
+    },
+    "chest": {
+      "socket": "Hitbox_Chest",
+      "primary_bones": {"Chest": 1.0, "Spine": 0.7},
+      "secondary_bones": {"Neck": 0.3, "Head": 0.25, "Hips": 0.2},
+      "max_degrees": 14.0
+    },
+    "pelvis": {
+      "socket": "Hitbox_Pelvis",
+      "primary_bones": {"Hips": 1.0, "Spine": 0.5},
+      "secondary_bones": {"Chest": 0.2, "LeftUpperLeg": 0.25, "RightUpperLeg": 0.25},
+      "max_degrees": 12.0
+    }
+  },
+  "optional_hit_zones": {
+    "left_arm": {
+      "primary_bones": {"LeftUpperArm": 1.0, "LeftLowerArm": 0.7},
+      "secondary_bones": {"Chest": 0.2, "LeftHand": 0.35},
+      "max_degrees": 16.0
+    },
+    "right_arm": {
+      "primary_bones": {"RightUpperArm": 1.0, "RightLowerArm": 0.7},
+      "secondary_bones": {"Chest": 0.2, "RightHand": 0.35},
+      "max_degrees": 16.0
+    },
+    "left_leg": {
+      "primary_bones": {"LeftUpperLeg": 1.0, "LeftLowerLeg": 0.7},
+      "secondary_bones": {"Hips": 0.25, "LeftFoot": 0.3},
+      "max_degrees": 12.0
+    },
+    "right_leg": {
+      "primary_bones": {"RightUpperLeg": 1.0, "RightLowerLeg": 0.7},
+      "secondary_bones": {"Hips": 0.25, "RightFoot": 0.3},
+      "max_degrees": 12.0
+    }
+  },
+  "impulse_classes": {
+    "small":  {"duration": 0.18, "strength": 0.35, "stagger": false},
+    "medium": {"duration": 0.28, "strength": 0.65, "stagger": false},
+    "heavy":  {"duration": 0.45, "strength": 1.0,  "stagger": true}
+  },
+  "directions": [
+    "front", "back", "left", "right",
+    "front_left", "front_right", "back_left", "back_right",
+    "up", "down"
+  ],
+  "lods": {
+    "0": "full_body_procedural",
+    "1": "torso_head_only",
+    "2": "baked_clip_only",
+    "3": "disabled"
+  },
+  "animation_tags": ["pain", "stumble", "fall", "brace", "recoil", "recovery"],
+  "baked_clips": {
+    "prefix": "RP_Hit",
+    "directions": ["front", "back", "left", "right"],
+    "class_names": {"small": "Light", "medium": "Medium", "heavy": "Heavy"},
+    "fps": 30,
+    "frames": {"neutral_in": 1, "peak": 4, "follow_through": 7, "recovery": 12, "neutral_out": 16}
+  },
+  "defaults": {
+    "recovery_pose": "RP_Recovery_Neutral",
+    "total_mass_kg": 80.0,
+    "mass_fractions": {
+      "Hips": 0.14, "Spine": 0.12, "Chest": 0.18, "Neck": 0.03, "Head": 0.08,
+      "LeftUpperArm": 0.03, "LeftLowerArm": 0.02, "LeftHand": 0.01,
+      "RightUpperArm": 0.03, "RightLowerArm": 0.02, "RightHand": 0.01,
+      "LeftUpperLeg": 0.10, "LeftLowerLeg": 0.05, "LeftFoot": 0.015,
+      "RightUpperLeg": 0.10, "RightLowerLeg": 0.05, "RightFoot": 0.015
+    },
+    "zone_toughness": 1.0,
+    "state_modifiers": {
+      "idle": 1.0,
+      "walking": 0.85,
+      "running": 0.65,
+      "aiming": 0.8,
+      "in_cover": 0.45,
+      "staggered": 0.4,
+      "dying": 0.0
+    },
+    "running_lower_body_scale": 0.5,
+    "staggered_soft_scale": 0.35,
+    "max_stale_ms": 250,
+    "same_zone_cooldown_ms": 120,
+    "limits": {
+      "Head":  {"pitch": 18.0, "yaw": 18.0, "roll": 10.0},
+      "Neck":  {"pitch": 14.0, "yaw": 14.0, "roll": 8.0},
+      "Chest": {"pitch": 14.0, "yaw": 16.0, "roll": 10.0},
+      "Spine": {"pitch": 12.0, "yaw": 12.0, "roll": 8.0},
+      "Hips":  {"pitch": 10.0, "yaw": 10.0, "roll": 8.0},
+      "LeftUpperArm":  {"pitch": 16.0, "yaw": 16.0, "roll": 10.0},
+      "LeftLowerArm":  {"pitch": 16.0, "yaw": 12.0, "roll": 8.0},
+      "LeftHand":      {"pitch": 12.0, "yaw": 10.0, "roll": 8.0},
+      "RightUpperArm": {"pitch": 16.0, "yaw": 16.0, "roll": 10.0},
+      "RightLowerArm": {"pitch": 16.0, "yaw": 12.0, "roll": 8.0},
+      "RightHand":     {"pitch": 12.0, "yaw": 10.0, "roll": 8.0},
+      "LeftUpperLeg":  {"pitch": 12.0, "yaw": 8.0,  "roll": 6.0},
+      "LeftLowerLeg":  {"pitch": 12.0, "yaw": 6.0,  "roll": 4.0},
+      "LeftFoot":      {"pitch": 10.0, "yaw": 6.0,  "roll": 4.0},
+      "RightUpperLeg": {"pitch": 12.0, "yaw": 8.0,  "roll": 6.0},
+      "RightLowerLeg": {"pitch": 12.0, "yaw": 6.0,  "roll": 4.0},
+      "RightFoot":     {"pitch": 10.0, "yaw": 6.0,  "roll": 4.0}
+    },
+    "timing": {
+      "attack_time": 0.04,
+      "hold_time": 0.05,
+      "recover_time": 0.22
+    },
+    "variation": {
+      "seeded_noise_degrees": 2.5,
+      "mirror_probability": 0.15,
+      "secondary_delay": 0.035
+    },
+    "default_lod": 0
+  },
+  "preset_support": {
+    "player_character":       {"support": "optional"},
+    "enemy_grunt":            {"support": "default"},
+    "heavy_enemy":            {"support": "default", "limit_scale": 0.8, "mass_scale": 1.5},
+    "civilian_npc":           {"support": "optional"},
+    "mission_npc":            {"support": "optional"},
+    "first_person_arms":      {"support": "unsupported"},
+    "masked_character":       {"support": "optional"},
+    "cosmetic_preview_dummy": {"support": "unsupported"}
+  }
+}

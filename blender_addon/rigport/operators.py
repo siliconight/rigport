@@ -789,6 +789,13 @@ class RIGPORT_OT_validate(bpy.types.Operator):
                 elif vis_missing and p.get("minimum_mouth_lod", 3) == 0:
                     add_result(scene, "WARN", f"Mouth LOD 0 needs visemes; missing: {', '.join(vis_missing)}.")
 
+        if scene.rigport.hitreact_enabled:
+            from . import hitreact
+            for status, message in hitreact.validate(
+                {b.name for b in rig.data.bones}, pid, scene.rigport.hitreact_include_limbs
+            ):
+                add_result(scene, status, message)
+
         if not any(r.status == "FAIL" for r in scene.rigport.results):
             add_result(scene, "INFO", "Blender-side checks passed. Export the GLB and validate in Godot.")
         return {"FINISHED"}

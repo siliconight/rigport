@@ -1,4 +1,4 @@
-# RigPort 0.1.0 (MVP)
+# RigPort 0.2.0-dev
 
 **Rig it. Test it. Ship it to Godot.**
 
@@ -21,7 +21,20 @@ godot_addon/addons/rigport/     Godot editor add-on + runtime driver (Godot 4.2+
 
 The contracts are duplicated into both add-ons so each installs standalone.
 `contracts/` is the source of truth — if you edit a contract, copy it into
-both add-ons.
+both add-ons (`tools/sync_contracts.sh`).
+
+## HitReact (v0.2, Phase 1)
+
+Procedural gunshot hit reactions. Blender panel section **7. Damage
+Reactions** (opt-in per character) validates the rig against
+`hit_react_contract.json`, previews seeded directional reactions on the rig,
+and exports a per-character `*.hitreact.json` profile next to the GLB. The
+profile drives the Godot `RigPortHitReactDriver` (SkeletonModifier3D overlay
+— Phase 2, not yet in this repo). Head/chest/pelvis zones are required and
+use the `Hitbox_*` sockets; arm/leg zones are opt-in. `first_person_arms`
+and `cosmetic_preview_dummy` presets don't support HitReact.
+
+Headless logic tests: `python3 tools/test_hitreact.py` (no Blender needed).
 
 ## Publishing to GitHub
 
@@ -118,3 +131,59 @@ reads that bus's peak level, so anything else on the bus pollutes the flap.
 - `mouth_shape_contract.json` — 4 MVP shapes, 7 visemes, optional expressions.
 - `mouth_lod_contract.json` — LOD 0–3 modes, required shapes, update rates.
 - `presets.json` — 8 character presets and their requirements.
+
+### Godot runtime (Phase 2)
+
+`RigPortHitReactDriver` (**Godot 4.3+**, `SkeletonModifier3D`) sits under the
+character's `Skeleton3D`, loads the `.hitreact.json` profile, and applies
+seeded, limit-clamped additive pose offsets after `AnimationMixer` — LOD 0
+full body, LOD 1 torso/head. `RigPortHitReactReceiver` on the character root
+is the gameplay API: `apply_hit(RigPortHitEvent)` /
+`apply_gunshot_hit(...)`. Attach `RigPortHitReactTest` next to the character
+for keyboard smoke testing (1-9). Aggregation: same-zone hits within 80 ms
+combine, same-zone spam dampens 0.6x, max 3 active reactions, per-bone
+clamps always win. If reactions lean INTO the shot on your rig, toggle
+`flip_front` / `flip_side` on the driver.
+
+### Runtime integration (Phase 3)
+
+State gating is data-driven from the contract `state_modifiers` table
+(idle 1.0 → dying 0.0). Set it from AI/locomotion via
+`receiver.set_npc_state(&"running")`. Running additionally halves pelvis/leg
+motion; staggered NPCs turn non-heavy hits into small torso twitches; killed
+events bypass gating so the fatal impact reads before death handoff.
+Late events join in progress via `event.age_ms`; events staler than
+`max_stale_ms` (250) drop unless killed. Same-zone hits: ≤80 ms merge,
+80–120 ms drop (cooldown), beyond that dampen 0.6x.
+`examples/hitreact_server_integration_example.gd` shows the full
+server-authoritative payload flow (damage bands → impulse class, server
+seed, tick-based aging, headless-server skip).
+
+### Editor tooling + physics metadata (Phase 4)
+
+The Godot validator now runs `_check_hitreact` (driver present, profile
+loads, zones/bones/sockets resolve, version supported) and the dock/report
+show a dedicated `HitReact: PASS/WARN/FAIL/N/A` line. Dock buttons: Add
+HitReact Driver (auto-adds a receiver and auto-assigns
+`<scene>.hitreact.json` if present), Assign HitReact Profile, Create
+HitReact Test Scene. The driver has `debug_draw` (impact point, incoming
+red, reaction green, 0.5 s). Profiles now carry ARC-style rig metadata for
+the future stumble/partial-ragdoll layer: `physics.total_mass_kg` +
+per-bone `mass_hints_kg` (heavy enemies 1.5x), per-zone `toughness`, and
+`style_targets` (animation tag vocabulary + recovery pose name). Data
+only — nothing consumes it at runtime yet.
+
+### Baked clip fallback (Phase 5)
+
+Blender panel button **Generate Additive Hit Clips** bakes noise-free
+canonical RP_Hit_* actions (36 for core zones: 3 zones x 4 cardinal
+directions x 3 impulse classes; 84 with limb zones) using the exact same
+offset math as the preview and runtime — TDD frame timing at 30 fps
+(neutral 1 / peak 4 / follow-through 7 / recovery 12 / neutral 16),
+secondary bones lag to the follow-through frame. **Validate Hit Clips**
+checks they're short, bone-only, and scale-free. Enable animation export on
+the GLB to ship them. In Godot, LOD 2 resolves zone + nearest cardinal
+direction + class to the clip name, emits `baked_clip_requested` (hook into
+an AnimationTree add-blend for true additive playback), and falls back to
+playing directly on `baked_anim_player` — fine for far NPCs. The validator
+warns when a driver sits at LOD 2 with no reachable RP_Hit_* clips.

@@ -22,6 +22,9 @@ static func to_markdown(r: Dictionary) -> String:
 	lines.append("## Result")
 	lines.append("")
 	lines.append("%s." % r.get("band", "?"))
+	if r.has("hitreact"):
+		lines.append("")
+		lines.append("HitReact: %s" % r.get("hitreact", "N/A"))
 	for section: Array in [["Pass", "passes"], ["Warnings", "warns"], ["Failures", "fails"]]:
 		lines.append("")
 		lines.append("## %s" % section[0])
